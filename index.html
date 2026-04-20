@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --gold: #d4a853;
@@ -1075,7 +1076,16 @@
             <p>Sé uno de los primeros en experimentar Dune: Arrakis Dominion. Wishlist ahora y recibe recompensas exclusivas.</p>
             <div class="cta-buttons">
                 <a href="#" class="btn btn-primary">Wishlist en Steam</a>
-                <a href="#" class="btn btn-secondary">Registrarme para Beta</a>
+                <a href="#" class="btn btn-secondary" id="registerBetaBtn">Registrarme para Beta</a>
+            </div>
+            
+            <div id="newsletterForm" style="margin-top: 40px; display: none;">
+                <p style="margin-bottom: 20px;">Ingresa tu email para registrarte:</p>
+                <form id="betaForm" style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                    <input type="email" id="emailInput" placeholder="tu@email.com" required style="padding: 15px 20px; border: 2px solid var(--gold); background: var(--dark); color: var(--text-light); font-size: 1rem; min-width: 250px;">
+                    <button type="submit" class="btn btn-primary">Enviar</button>
+                </form>
+                <p id="formMessage" style="margin-top: 15px;"></p>
             </div>
         </div>
     </section>
@@ -1153,6 +1163,48 @@
         }, observerOptions);
 
         fadeElements.forEach(el => observer.observe(el));
+
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://mlwriavicqpnrilusmkk.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1sd3JpYXZpY3FwbnJpbHVzbWttIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2ODIyNzEsImV4cCI6MjA5MjI1ODI3MX0.S74yQdD4-aApOAT35YSAodQGXLkUv_whi_4_gT94wb8';
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Beta Registration
+        const registerBetaBtn = document.getElementById('registerBetaBtn');
+        const newsletterForm = document.getElementById('newsletterForm');
+        const betaForm = document.getElementById('betaForm');
+        const formMessage = document.getElementById('formMessage');
+        const emailInput = document.getElementById('emailInput');
+
+        registerBetaBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            newsletterForm.style.display = 'block';
+            emailInput.focus();
+        });
+
+        betaForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = emailInput.value;
+
+            formMessage.textContent = 'Registrando...';
+            formMessage.style.color = 'var(--gold)';
+
+            const { data, error } = await supabase
+                .from('newsletter')
+                .upsert({ email: email }, { onConflict: 'email' })
+                .select();
+
+            if (error) {
+                formMessage.textContent = 'Error al registrar. Intenta de nuevo.';
+                formMessage.style.color = '#ff6b6b';
+                console.error('Supabase error:', error);
+            } else {
+                formMessage.textContent = '¡Registrado! Gracias por tu interés en Dune: Arrakis Dominion.';
+                formMessage.style.color = 'var(--gold-light)';
+                emailInput.value = '';
+            }
+        });
     </script>
 </body>
 </html>
